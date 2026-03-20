@@ -2,7 +2,8 @@ from flask import request, jsonify
 from models import User, Incident
 from database import db
 import google.generativeai as genai
-genai.configure(api_key="AIzaSyCYmEtSgmb-rfnIf9SayesOBfn3jbpO4mE")
+genai.configure(api_key="")
+
 
 
 def register_routes(app):
