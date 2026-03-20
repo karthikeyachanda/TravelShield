@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Travel Safety Dashboard</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+
+body{
+font-family:Arial;
+}
+
+#map{
+height:500px;
+width:100%;
+}
+
+button{
+padding:10px;
+margin-top:10px;
+}
+
+#chatbox{
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Travel Shield Dashboard</h2>
+
+<div id="map"></div>
+
+<br>
+
+<button onclick="sendSOS()">SOS Emergency</button>
+
+
+<!-- AI CHATBOT UI -->
+<div id="chatbox" style="margin-top:20px; border:1px solid #ccc; padding:10px; width:300px;">
+    
+    <h3>AI Chatbot</h3>
+
+    <div id="chatArea" style="height:150px; overflow-y:auto; border:1px solid #ddd; padding:5px; margin-bottom:10px;"></div>
+
+    <input type="text" id="question" placeholder="Ask something..." style="width:70%; padding:5px;">
+    
+    <button onclick="askAI()">Send</button>
+
+</div>
+
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<script>
+
+// create map
+var map = L.map('map').setView([17.3850, 78.4867], 13)
+
+// OpenStreetMap layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map)
+
+
+
+// GET USER LIVE LOCATION
+navigator.geolocation.getCurrentPosition(function(position){
+
+let userLat = position.coords.latitude
+let userLon = position.coords.longitude
+
+map.setView([userLat,userLon],15)
+
+L.marker([userLat,userLon])
+.addTo(map)
+.bindPopup("You are here")
+.openPopup()
+
+},
+function(error){
+alert("Location denied → showing default location")
+
+map.setView([17.3850, 78.4867], 13)
+})
+
+
+
+
+// DISTANCE CALCULATION
+function getDistance(lat1, lon1, lat2, lon2){
+
+const R = 6371e3
+
+const φ1 = lat1 * Math.PI/180
+const φ2 = lat2 * Math.PI/180
+const Δφ = (lat2-lat1) * Math.PI/180
+const Δλ = (lon2-lon1) * Math.PI/180
+
+const a =
+Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+Math.cos(φ1) * Math.cos(φ2) *
+Math.sin(Δλ/2) * Math.sin(Δλ/2)
+
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+
+return R * c
+
+}
+
+
+
+// CHECK DANGER ZONE
+function checkDangerZone(userLat,userLon,incidents){
+
+let dangerCount = 0
+
+incidents.forEach(function(incident){
+
+let distance = getDistance(
+userLat,
+userLon,
+incident.latitude,
+incident.longitude
+)
+
+if(distance < 500){
+dangerCount++
+}
+
+})
+
+if(dangerCount >= 3){
+
+alert("⚠️ Warning: You are entering a high risk area!")
+
+}
+
+}
+
+
+
+// LOAD INCIDENTS + HEATMAP
+async function loadIncidents(){
+
+let response = await fetch("http://127.0.0.1:5000/incidents")
+
+let incidents = await response.json()
+
+let heatPoints = []
+
+incidents.forEach(function(incident){
+
+L.marker([incident.latitude, incident.longitude])
+.addTo(map)
+.bindPopup(incident.description)
+
+heatPoints.push([incident.latitude, incident.longitude, 0.5])
+
+})
+
+L.heatLayer(heatPoints,{
+radius:25,
+blur:15,
+maxZoom:17
+}).addTo(map)
+
+navigator.geolocation.getCurrentPosition(function(position){
+
+let userLat = position.coords.latitude
+let userLon = position.coords.longitude
+
+checkDangerZone(userLat,userLon,incidents)
+
+})
+
+}
+
+loadIncidents()
+
+
+
+// AI RISK SCORE WHEN USER CLICKS MAP
+map.on("click", async function(e){
+
+let lat = e.latlng.lat
+let lon = e.latlng.lng
+
+let response = await fetch("http://127.0.0.1:5000/risk-score",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+latitude:lat,
+longitude:lon
+})
+
+})
+
+let data = await response.json()
+
+L.popup()
+.setLatLng([lat,lon])
+.setContent(
+"<b>Risk Score:</b> "+data.risk_score+
+"<br><b>Status:</b> "+data.status
+)
+.openOn(map)
+
+})
+
+
+
+// REPORT INCIDENT WHEN USER RIGHT-CLICKS MAP
+map.on("contextmenu", async function(e){
+
+let lat = e.latlng.lat
+let lon = e.latlng.lng
+
+let description = prompt("Enter incident description:")
+
+if(!description) return
+
+let response = await fetch("http://127.0.0.1:5000/report-incident",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+user_id:1,
+latitude:lat,
+longitude:lon,
+description:description
+})
+
+})
+
+let data = await response.json()
+
+alert(data.message)
+
+L.marker([lat,lon])
+.addTo(map)
+.bindPopup(description)
+
+})
+
+
+
+// FIND NEARBY HOSPITALS AND POLICE
+async function findNearbyServices(lat, lon){
+
+let radius = 3000
+
+let query = `
+[out:json];
+(
+node["amenity"="hospital"](around:${radius},${lat},${lon});
+node["amenity"="police"](around:${radius},${lat},${lon});
+);
+out;
+`
+
+let url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)
+
+let response = await fetch(url)
+
+let data = await response.json()
+
+data.elements.forEach(function(place){
+
+let type = place.tags.amenity
+let name = place.tags.name || type
+
+let icon = type === "hospital" ? "🏥" : "🚓"
+
+L.marker([place.lat, place.lon])
+.addTo(map)
+.bindPopup(icon + " " + name)
+
+})
+
+}
+
+
+
+// SOS FUNCTION
+function sendSOS(){
+
+navigator.geolocation.getCurrentPosition(async function(position){
+
+let latitude = position.coords.latitude
+let longitude = position.coords.longitude
+
+let response = await fetch("http://127.0.0.1:5000/sos",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+user_id:1,
+latitude:latitude,
+longitude:longitude
+})
+
+})
+
+let data = await response.json()
+
+alert(data.status)
+
+findNearbyServices(latitude, longitude)
+
+})
+
+}
+
+
+
+// AI CHATBOT FUNCTION
+async function askAI(){
+
+let question = document.getElementById("question").value
+
+if(question === "") return
+
+let chatArea = document.getElementById("chatArea")
+
+// show user message
+chatArea.innerHTML += "<p><b>You:</b> " + question + "</p>"
+
+let response = await fetch("http://127.0.0.1:5000/ai-chat",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+question:question
+})
+})
+
+let data = await response.json()
+
+// show AI reply
+chatArea.innerHTML += "<p><b>AI:</b> " + data.answer + "</p>"
+
+// clear input
+document.getElementById("question").value = ""
+
+// auto scroll
+chatArea.scrollTop = chatArea.scrollHeight
+}
+
+</script>
+
+</body>
+
+</html>
