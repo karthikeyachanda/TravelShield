@@ -1,6 +1,6 @@
 from flask import request, jsonify
-from models import User, Incident
-from database import db
+from backend.models import User, Incident
+from backend.database import db
 import google.generativeai as genai
 genai.configure(api_key="AIzaSyBwWmmloQ-1qvgdK_rNR9ge9_TVbNhPslc")
 
