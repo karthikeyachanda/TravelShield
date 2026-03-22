@@ -2,7 +2,7 @@ from flask import request, jsonify
 from models import User, Incident
 from database import db
 import google.generativeai as genai
-genai.configure(api_key="")
+genai.configure(api_key="AIzaSyBwWmmloQ-1qvgdK_rNR9ge9_TVbNhPslc")
 
 
 
@@ -180,7 +180,7 @@ https://www.google.com/maps?q={latitude},{longitude}
         question = data.get("question")
 
         try:
-            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+            model = genai.GenerativeModel("gemini-3.1-pro-preview")
 
             response = model.generate_content(question)
 
@@ -190,8 +190,32 @@ https://www.google.com/maps?q={latitude},{longitude}
 
         except Exception as e:
             return jsonify({
-                "answer": str(e)
+                "answer": "Error: " + str(e)
             })
 
+    @app.route("/translate", methods=["POST"])
+    def translate():
+
+        data = request.get_json()
+
+        text = data.get("text")
+        target_lang = data.get("target_lang")
+
+        try:
+            model = genai.GenerativeModel("gemini-3.1-pro-preview")
+
+            prompt = f"Translate this text into {target_lang}: {text}"
+
+            response = model.generate_content(prompt)
+
+            return jsonify({
+                "translated_text": response.text
+            })
+
+        except Exception as e:
+            print("ERROR:", e)   # 👈 IMPORTANT (check terminal)
+            return jsonify({
+                "translated_text": "Error: " + str(e)
+            })
 
  
