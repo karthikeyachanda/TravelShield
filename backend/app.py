@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_mail import Mail
-from database import db
-from routes import register_routes
+from backend.database import db
+from backend.routes import register_routes
 
 # create flask app
 app = Flask(__name__)
