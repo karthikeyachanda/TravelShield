@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)
 
 # 🔑 GEMINI API KEY (Hardcoded for guaranteed access)
-genai.configure(api_key="AIzaSyB74ykzvVOdDSHOShCY7gOAnwmnFNIWqNU")
+genai.configure(api_key="")
 
 
 # database configuration
@@ -26,7 +26,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = "karthikeya201620@gmail.com"
-app.config['MAIL_PASSWORD'] = "ftisuqvkuxtehzkm"
+app.config['MAIL_PASSWORD'] = ""
 app.config['MAIL_DEFAULT_SENDER'] = "24211a0593@bvrit.ac.in"
 
 
