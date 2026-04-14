@@ -312,4 +312,4 @@ https://www.google.com/maps?q={latitude},{longitude}
             response = model.generate_content(prompt)
             return jsonify({"budget_plan": response.text})
         except Exception as e:
-            return jsonify({"error": str(e)})
+            return jsonify({"error": f"Gemini API Error: {str(e)}"})

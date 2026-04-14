@@ -240,15 +240,18 @@
 
         <!-- 2. AI CHATBOT PAGE -->
         <div id="view-chatbot" class="view-section">
-            <div class="glass-card tool-grid">
+            <div class="glass-card tool-grid" style="max-width: 800px; margin: 0 auto; height:75vh; display:flex; flex-direction:column;">
                 <h3 class="section-title"><i class="fa-solid fa-robot"></i> Travel AI Assistant</h3>
-                <div id="chatArea"></div>
+                <div id="chatArea" style="flex:1; overflow-y:auto; border:1px solid var(--border-color); border-radius:12px; padding:15px; margin-bottom:15px; background:var(--bg-color); display:flex; flex-direction:column; gap:10px;">
+                    <!-- Messages go here -->
+                </div>
                 <div class="flex-row">
-                    <input type="text" id="question" placeholder="Ask for travel tips, safety guidance..." style="margin-bottom:0;">
+                    <input type="text" id="question" placeholder="Ask for travel tips, safety guidance..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') askAI()">
                     <button class="action-btn" onclick="askAI()">Send</button>
                 </div>
             </div>
         </div>
+
 
         <!-- 3. TRANSLATOR PAGE -->
         <div id="view-translator" class="view-section">
@@ -638,27 +641,40 @@
         }
 
         // === CHATBOT LOGIC ===
-        let chatHistory = [];
-        async function askAI(){
+        async function askAI() {
             let question = document.getElementById("question").value;
-            if(question === "") return;
-            
+            if(!question) return;
+
             let chatArea = document.getElementById("chatArea");
-            chatArea.innerHTML += `<div class="chat-msg chat-user">${question}</div>`;
-            chatHistory.push({role: "User", text: question});
+            chatArea.innerHTML += `<div class="chat-bubble chat-user">${question}</div>`;
             document.getElementById("question").value = "";
 
+            let typingId = "typing-" + Date.now();
+            chatArea.innerHTML += `<div id="${typingId}" class="chat-bubble chat-ai">Thinking...</div>`;
+            chatArea.scrollTop = chatArea.scrollHeight;
+
             try {
-            let response = await fetch("http://127.0.0.1:5000/ai-chat",{
-                method:"POST", headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({ question:question, history: chatHistory })
-            });
-            let data = await response.json();
-            chatArea.innerHTML += `<div class="chat-msg chat-ai">${data.answer}</div>`;
-            chatHistory.push({role: "Assistant", text: data.answer.replace(/<br>/g, "\n")});
-            } catch(e) { chatArea.innerHTML += `<div class="chat-msg chat-ai" style="color:red;">Error connecting API</div>`; }
+                let response = await fetch("http://127.0.0.1:5000/ai-chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: question })
+                });
+
+                let data = await response.json();
+                document.getElementById(typingId).remove();
+
+                if (data.answer) {
+                    chatArea.innerHTML += `<div class="chat-bubble chat-ai">${data.answer.replace(/\\n/g, '<br>')}</div>`;
+                } else {
+                    chatArea.innerHTML += `<div class="chat-bubble chat-ai" style="color:red;">Error connecting API</div>`;
+                }
+            } catch(e) {
+                document.getElementById(typingId).remove();
+                chatArea.innerHTML += `<div class="chat-bubble chat-ai" style="color:red;">Server Unreachable</div>`;
+            }
             chatArea.scrollTop = chatArea.scrollHeight;
         }
+
 
         // === TRANSLATOR ===
         async function translateText(){

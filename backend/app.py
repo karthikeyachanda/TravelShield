@@ -12,9 +12,8 @@ app = Flask(__name__)
 # enable CORS
 CORS(app)
 
-# 🔑 GEMINI API KEY
-# 🔑 GEMINI API KEY (Safely loaded from Environment)
-genai.configure(api_key=os.getenv("GEMINI_API_KEY", "YOUR_KEY_HERE"))
+# 🔑 GEMINI API KEY (Hardcoded for guaranteed access)
+genai.configure(api_key="AIzaSyB74ykzvVOdDSHOShCY7gOAnwmnFNIWqNU")
 
 
 # database configuration
@@ -40,8 +39,7 @@ db.init_app(app)
 # register routes
 register_routes(app)
 
-
-# ✅ CHATBOT ROUTE (NEW)
+# ✅ CHATBOT ROUTE (STRICTLY GEMINI ONLY)
 @app.route("/ai-chat", methods=["POST"])
 def ai_chat():
     data = request.json
@@ -49,19 +47,11 @@ def ai_chat():
 
     try:
         model = genai.GenerativeModel("gemini-2.5-flash")
-        prompt = f"You are a travel safety assistant. Answer the following question safely and helpfully:\n\n{question}"
+        prompt = f"You are a travel safety assistant. Answer safely and helpfully:\n\n{question}"
         response = model.generate_content(prompt)
-
-        answer = response.text
-
-        return jsonify({"answer": answer})
-
+        return jsonify({"answer": response.text})
     except Exception as e:
-        return jsonify({"answer": str(e)})
-
-
-
-# test route
+        return jsonify({"answer": f"Gemini API Error: {str(e)}"})
 @app.route("/")
 def home():
     return {
