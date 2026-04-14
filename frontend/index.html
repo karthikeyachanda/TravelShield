@@ -1,28 +1,217 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>Travel Shield</title>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripOn Landing Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Outer White Frame */
+        .outer-frame {
+            width: 95vw;
+            height: 90vh;
+            background-color: #fff;
+            border-radius: 40px;
+            padding: 12px; /* This creates the white border thickness */
+            display: flex;
+        }
+
+        /* Main Image Container */
+        .hero-section {
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.7) 100%), 
+                        url('https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=2070&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 60px;
+        }
+
+        /* Navigation Bar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #1a1a1a;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 8px 24px;
+            border-radius: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #444;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-links a.active {
+            background: #fff;
+            padding: 4px 14px;
+            border-radius: 20px;
+            color: #000;
+        }
+
+        .signup-btn {
+            background: #4A90E2;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .register-btn{
+            background: #4A90E2;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Hero Content */
+        .content-container {
+            width: 100%;
+            color: white;
+        }
+
+        h1 {
+            font-size: 100px;
+            font-weight: 600;
+            line-height: 0.9;
+            letter-spacing: -3px;
+            margin-bottom: 30px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .description {
+            max-width: 320px;
+            font-size: 15px;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 35px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .btn-blue {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-outline {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 900px) {
+            h1 { font-size: 60px; }
+            .footer-content { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
 <body>
 
-<h1>Travel Shield - AI Tourist Safety Platform</h1>
+    <div class="outer-frame">
+        <div class="hero-section">
+            
 
-<p>Stay safe while traveling</p>
 
-<br>
+                <nav>
+                    <div class="logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#4A90E2" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 16.5C21 16.88 20.79 17.21 20.47 17.38L12.57 21.82C12.41 21.94 12.21 22 12 22C11.79 22 11.59 21.94 11.43 21.82L3.53 17.38C3.21 17.21 3 16.88 3 16.5V7.5C3 7.12 3.21 6.79 3.53 6.62L11.43 2.18C11.59 2.06 11.79 2 12 2C12.21 2 12.41 2.06 12.57 2.18L20.47 6.62C20.79 6.79 21 7.12 21 7.5V16.5Z" stroke="#4A90E2" stroke-width="2" fill="none"/>
+                        </svg>
+                        TravelShield
+                    </div>
+                        <div class="nav-links">
+                            <a href="#" class="active">Home</a>
+                            <a href="#">Tours</a>
+                            <a href="#">Blogs</a>
+                            <a href="#">About us</a>
+                        </div>
+                        <div class="nav-auth">
+                            <a href="login.html" class="signup-btn">Login</a>
+                            <a href="registration.html" class="register-btn">Register</a>
+                        </div>
+                    </nav>
 
-<a href="login.html">
-<button>Login</button>
-</a>
 
-<br><br>
 
-<a href="registration.html">
-<button>Register</button>
-</a>
+            <div class="content-container">
+                <h1>Your next<br>adventure awaits</h1>
+                
+                <div class="footer-content">
+                    <p class="description">
+                        From budgeting to booking, we handle the details so you can enjoy the journey. Your next adventure starts here
+                    </p>
+                    <div class="buttons-row">
+                        <a href="#" class="btn btn-blue">Explore</a>
+                        <a href="#" class="btn btn-outline">Learn more</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
 </body>
-
 </html>

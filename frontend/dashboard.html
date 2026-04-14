@@ -1,214 +1,737 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>Travel Safety Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Shield Dashboard</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #1a1a2e;
+            --sidebar-text: #e0e0e0;
+            --sidebar-hover: #16213e;
+            --text-color: #333;
+            --card-bg: #fff;
+            --accent-color: #0f3460;
+            --highlight: #e94560;
+            --btn-bg: #e94560;
+            --btn-hover: #d03050;
+            --border-color: #ddd;
+        }
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+        body.dark-theme {
+            --bg-color: #121212;
+            --sidebar-bg: #0d0d0d;
+            --text-color: #f0f0f0;
+            --card-bg: #1e1e1e;
+            --accent-color: #4a4a4a;
+            --border-color: #333;
+        }
 
-<style>
-body{
-font-family:Arial;
-}
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', Arial, sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.3s;
+        }
 
-#map{
-height:500px;
-width:100%;
-}
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
 
-button{
-padding:10px;
-margin-top:10px;
-}
+        .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            color: #fff;
+        }
 
-#chatbox{
-margin-top:20px;
-}
-</style>
+        .brand-logo i { color: var(--highlight); margin-right: 8px;}
 
+        .nav-menu {
+            list-style: none;
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            color: #b0b0b0;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--sidebar-hover);
+            color: #fff;
+            border-left: 4px solid var(--highlight);
+        }
+
+        .nav-item i { width: 20px; text-align: center; }
+
+        /* Main Content Styling */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .greeting {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .sos-btn {
+            background: #ff3b3b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 59, 59, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: pulse-sos 2s infinite;
+        }
+
+        @keyframes pulse-sos {
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 59, 59, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 59, 0); }
+        }
+
+        .sos-btn:hover { transform: scale(1.05); }
+
+        /* View Container */
+        .view-section {
+            display: none;
+            padding: 30px 40px;
+            animation: fadeIn 0.4s ease;
+        }
+        .view-section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+
+        /* General Card UI */
+        .glass-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        h3.section-title {
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* Forms Elements */
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        button.action-btn {
+            background: var(--highlight);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        button.action-btn:hover { background: var(--btn-hover); }
+
+        #map { height: 500px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 1;}
+        
+        #chatArea { height: 350px; overflow-y: auto; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .chat-msg { margin-bottom: 10px; padding: 10px 14px; border-radius: 8px; max-width: 80%; line-height: 1.4;}
+        .chat-user { background: var(--highlight); color: white; margin-left: auto; border-bottom-right-radius: 0;}
+        .chat-ai { background: var(--border-color); color: var(--text-color); margin-right: auto; border-bottom-left-radius: 0;}
+
+        /* Tools Grids */
+        .tool-grid { max-width: 600px; }
+        .flex-row { display: flex; gap: 10px; align-items: center;}
+    </style>
 </head>
-
 <body>
 
-<h2>Travel Shield Dashboard</h2>
-
-<div id="map"></div>
-
-<br>
-
-<button onclick="sendSOS()">SOS Emergency</button>
-
-
-<!-- ✅ AI CHATBOT -->
-<div style="margin-top:20px; border:1px solid #ccc; padding:10px; width:300px;">
-    
-<h3>AI Chatbot</h3>
-
-<div id="chatArea" style="height:150px; overflow-y:auto; border:1px solid #ddd; padding:5px; margin-bottom:10px;"></div>
-
-<input type="text" id="question" placeholder="Ask something..." style="width:70%; padding:5px;">
-<button onclick="askAI()">Send</button>
-
-</div>
-
-
-<!-- ✅ TRANSLATOR -->
-<div style="margin-top:20px; border:1px solid #ccc; padding:10px; width:300px;">
-
-<h3>Translator</h3>
-
-<input type="text" id="inputText" placeholder="Enter text" style="width:100%; padding:5px;"><br><br>
-
-<select id="language">
-<option value="Telugu">Telugu</option>
-<option value="Hindi">Hindi</option>
-<option value="English">English</option>
-<option value="Tamil">Tamil</option>
-</select>
-
-<button onclick="translateText()">Translate</button>
-
-<p id="translatedResult"></p>
-
-</div>
-
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-
-<script>
-
-// MAP
-var map = L.map('map').setView([17.3850, 78.4867], 13)
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map)
-
-
-// LOCATION
-navigator.geolocation.getCurrentPosition(function(position){
-
-let userLat = position.coords.latitude
-let userLon = position.coords.longitude
-
-map.setView([userLat,userLon],15)
-
-L.marker([userLat,userLon])
-.addTo(map)
-.bindPopup("You are here")
-.openPopup()
-
-},
-function(error){
-alert("Location denied → showing default location")
-})
-
-
-// LOAD INCIDENTS
-async function loadIncidents(){
-
-let response = await fetch("http://127.0.0.1:5000/incidents")
-let incidents = await response.json()
-
-incidents.forEach(function(incident){
-
-L.marker([incident.latitude, incident.longitude])
-.addTo(map)
-.bindPopup(incident.description)
-
-})
-
-}
-
-loadIncidents()
-
-
-// SOS
-function sendSOS(){
-
-navigator.geolocation.getCurrentPosition(async function(position){
-
-let latitude = position.coords.latitude
-let longitude = position.coords.longitude
-
-let response = await fetch("http://127.0.0.1:5000/sos",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-user_id:1,
-latitude:latitude,
-longitude:longitude
-})
-})
-
-let data = await response.json()
-alert(data.status)
-
-})
-
-}
-
-
-// ✅ CHATBOT FUNCTION
-async function askAI(){
-
-let question = document.getElementById("question").value
-
-if(question === "") return
-
-let chatArea = document.getElementById("chatArea")
-
-chatArea.innerHTML += "<p><b>You:</b> " + question + "</p>"
-
-let response = await fetch("http://127.0.0.1:5000/ai-chat",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-question:question
-})
-})
-
-let data = await response.json()
-
-chatArea.innerHTML += "<p><b>AI:</b> " + data.answer + "</p>"
-
-document.getElementById("question").value = ""
-chatArea.scrollTop = chatArea.scrollHeight
-
-}
-
-
-// ✅ TRANSLATOR FUNCTION
-async function translateText(){
-
-let text = document.getElementById("inputText").value
-let lang = document.getElementById("language").value
-
-if(text === "") return
-
-let response = await fetch("http://127.0.0.1:5000/translate",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-text:text,
-target_lang:lang
-})
-})
-
-let data = await response.json()
-
-document.getElementById("translatedResult").innerText = data.translated_text
-
-}
-
-</script>
-
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand-logo"><i class="fa-solid fa-shield-halved"></i> TravelShield</div>
+        <ul class="nav-menu" style="display:flex; flex-direction:column;">
+            <li class="nav-item active" onclick="showPage('dashboard', this)"><i class="fa-solid fa-map-location-dot"></i> Dashboard</li>
+            <li class="nav-item" onclick="showPage('chatbot', this)"><i class="fa-solid fa-robot"></i> AI Chatbot</li>
+            <li class="nav-item" onclick="showPage('translator', this)"><i class="fa-solid fa-language"></i> Translator</li>
+            <li class="nav-item" onclick="showPage('currency', this)"><i class="fa-solid fa-coins"></i> Currency Converter</li>
+            <li class="nav-item" onclick="showPage('tripbuddy', this)"><i class="fa-solid fa-plane-departure"></i> Trip Buddy Matching</li>
+            <li class="nav-item" onclick="showPage('smartroute', this)"><i class="fa-solid fa-route"></i> Smart Route Safety</li>
+            <li class="nav-item" style="margin-top:auto;" onclick="showPage('settings', this)"><i class="fa-solid fa-gear"></i> Settings</li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+        <header>
+            <div class="greeting" id="greetingMsg">Welcome, User</div>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <span id="voiceStatusIndicator" style="display:none; color:#e94560; font-weight:bold; font-size: 0.9rem;" title="Voice Monitoring is Active"><i class="fa-solid fa-microphone"></i> Listening...</span>
+                <button class="sos-btn" onclick="sendSOS()"><i class="fa-solid fa-triangle-exclamation"></i> SOS EMERGENCY</button>
+            </div>
+        </header>
+
+        <!-- 1. DASHBOARD MAP PAGE -->
+        <div id="view-dashboard" class="view-section active">
+            <h3 class="section-title">Live Location & Safety Map</h3>
+            <p style="margin-bottom: 15px;">View incidents or right-click map to report an issue.</p>
+            <div id="map"></div>
+        </div>
+
+        <!-- 2. AI CHATBOT PAGE -->
+        <div id="view-chatbot" class="view-section">
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-robot"></i> Travel AI Assistant</h3>
+                <div id="chatArea"></div>
+                <div class="flex-row">
+                    <input type="text" id="question" placeholder="Ask for travel tips, safety guidance..." style="margin-bottom:0;">
+                    <button class="action-btn" onclick="askAI()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TRANSLATOR PAGE -->
+        <div id="view-translator" class="view-section">
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-language"></i> Voice-to-Voice Translator</h3>
+                <div class="flex-row" style="margin-bottom: 15px;">
+                    <input type="text" id="inputText" placeholder="Enter text to translate..." style="margin-bottom: 0;">
+                    <button class="action-btn" onclick="startVoiceInput()" style="width: 50px; padding: 12px 0;" title="Voice Input"><i class="fa-solid fa-microphone"></i></button>
+                </div>
+                
+                <div class="flex-row">
+                    <select id="sourceLanguage">
+                        <option value="en">English</option>
+                        <option value="te">Telugu</option>
+                        <option value="hi">Hindi</option>
+                        <option value="ta">Tamil</option>
+                    </select>
+                    <span style="padding: 0 10px;">to</span>
+                    <select id="targetLanguage">
+                        <option value="te">Telugu</option>
+                        <option value="hi">Hindi</option>
+                        <option value="en">English</option>
+                        <option value="ta">Tamil</option>
+                    </select>
+                </div>
+
+                <div class="flex-row" style="margin-top: 10px;">
+                    <button class="action-btn" onclick="translateText()">Translate</button>
+                    <button class="action-btn" style="background:#4a4a4a;" onclick="speakTranslatedText()"><i class="fa-solid fa-volume-high"></i> Play</button>
+                </div>
+
+                <div id="translatedResult" style="margin-top: 20px; font-weight: 600; font-size:1.1rem; padding: 15px; background: var(--bg-color); border-radius:8px; min-height: 50px;"></div>
+            </div>
+        </div>
+
+        <!-- 4. CURRENCY CONVERTER PAGE -->
+        <div id="view-currency" class="view-section">
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-coins"></i> Live Currency Converter</h3>
+                <input type="number" id="amount" placeholder="Enter Amount">
+                <div class="flex-row">
+                    <select id="fromCurrency">
+                        <option value="USD">USD</option>
+                        <option value="INR">INR</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                    <span style="padding: 0 10px;"><i class="fa-solid fa-right-left"></i></span>
+                    <select id="toCurrency">
+                        <option value="INR">INR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </div>
+                <button class="action-btn" style="margin-top:10px; width:100%;" onclick="convertCurrency()">Convert</button>
+                <div id="result" style="margin-top: 20px; font-weight: bold; text-align:center; font-size:1.2rem;"></div>
+            </div>
+        </div>
+
+        <!-- 5. TRIP BUDDY MATCHING -->
+        <div id="view-tripbuddy" class="view-section">
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-plane-departure"></i> Trip Budget Estimator</h3>
+                <input type="text" id="tripOrigin" placeholder="From (e.g., Hyderabad)">
+                <input type="text" id="tripDestination" placeholder="To (e.g., Vizag)">
+                <input type="number" id="tripPeople" placeholder="Number of People" value="1" min="1">
+                <button class="action-btn" style="width:100%;" onclick="estimateBudget()">Calculate Budget</button>
+                <div id="budgetResult" style="margin-top:20px; font-size:0.95rem; white-space:pre-wrap; background:var(--bg-color); padding:15px; border-radius:8px; display:none; line-height:1.5;"></div>
+            </div>
+        </div>
+
+        <!-- 6. SMART ROUTE SAFETY -->
+        <div id="view-smartroute" class="view-section">
+            <div class="glass-card" style="max-width: 800px;">
+                <h3 class="section-title"><i class="fa-solid fa-route"></i> Smart Route Planning</h3>
+                <p style="margin-bottom: 20px; font-size: 0.95rem;">Enter the names of your starting location and destination to logically generate the route layout.</p>
+                
+                <input type="text" id="routeStartInput" placeholder="Enter starting location (e.g. Hyderabad)">
+                <input type="text" id="routeEndInput" placeholder="Enter destination (e.g. Vizag)">
+                
+                <button class="action-btn" style="width:100%; margin-bottom: 15px;" id="routeBtn">Find Secure Route</button>
+                
+                <p id="routeStatus" style="font-weight:bold; margin-bottom:15px;"></p>
+
+                <div id="routeMap" style="height: 400px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 1;"></div>
+            </div>
+        </div>
+
+        <!-- 7. SETTINGS PAGE -->
+        <div id="view-settings" class="view-section">
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-user-gear"></i> Account Settings</h3>
+                
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px; display:block;">Full Name</label>
+                <input type="text" id="profileName" placeholder="Your Name">
+
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px; display:block;">Age</label>
+                <input type="number" id="profileAge" placeholder="Your Age">
+
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px; display:block;">Emergency Contact</label>
+                <input type="text" id="profileContact" placeholder="+91 00000 00000">
+
+                <button class="action-btn" style="width:100%; margin-top:10px;" onclick="saveProfile()">Save Settings</button>
+            </div>
+
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-palette"></i> App Preferences</h3>
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px; display:block;">App Theme Option</label>
+                <select id="themeSelect" onchange="toggleTheme()" style="margin-bottom:0;">
+                    <option value="light">Light Mode</option>
+                    <option value="dark">Dark Mode</option>
+                </select>
+            </div>
+
+            <div class="glass-card tool-grid">
+                <h3 class="section-title"><i class="fa-solid fa-microphone-lines"></i> SOS Voice Activation</h3>
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px; display:block;">Enable Voice Monitoring</label>
+                <select id="voiceSosEnable" style="margin-bottom:15px;">
+                    <option value="false">Off</option>
+                    <option value="true">On</option>
+                </select>
+
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px; display:block;">Custom Wake Word</label>
+                <input type="text" id="voiceSosKeyword" placeholder="e.g. 'help me' or 'emergency'">
+                <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">If enabled, your browser will listen in the background. Saying your wake word will automatically trigger an SOS sequence.</p>
+
+                <button class="action-btn" style="width:100%;" onclick="saveVoiceSettings()">Save Voice Settings</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // === SPA NAVIGATION LOGIC ===
+        function showPage(pageId, navElement) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + pageId).classList.add('active');
+            if(navElement) navElement.classList.add('active');
+
+            if(pageId === 'dashboard' && map) {
+                setTimeout(() => { map.invalidateSize(); }, 200);
+            }
+            if(pageId === 'smartroute' && window.routeMap) {
+                setTimeout(() => { window.routeMap.invalidateSize(); }, 200);
+            }
+        }
+
+        // === SETTINGS & INIT LOGIC ===
+        function loadProfile() {
+            let n = localStorage.getItem("user_name");
+            if(!n) { n = "Traveler"; localStorage.setItem("user_name", n); }
+            document.getElementById("greetingMsg").innerText = "Welcome, " + n;
+            document.getElementById("profileName").value = n;
+            document.getElementById("profileAge").value = localStorage.getItem("user_age") || "";
+            document.getElementById("profileContact").value = localStorage.getItem("user_emergency") || "";
+
+            let theme = localStorage.getItem("theme_pref") || "light";
+            document.getElementById("themeSelect").value = theme;
+            if(theme === "dark") document.body.classList.add("dark-theme");
+
+            document.getElementById("voiceSosEnable").value = localStorage.getItem("voice_sos_enable") || "false";
+            document.getElementById("voiceSosKeyword").value = localStorage.getItem("voice_sos_keyword") || "help me";
+            initVoiceSOS();
+        }
+
+        function saveProfile() {
+            let n = document.getElementById("profileName").value;
+            localStorage.setItem("user_name", n);
+            localStorage.setItem("user_age", document.getElementById("profileAge").value);
+            localStorage.setItem("user_emergency", document.getElementById("profileContact").value);
+            document.getElementById("greetingMsg").innerText = "Welcome, " + n;
+            alert("Account Settings updated successfully!");
+        }
+
+        function saveVoiceSettings() {
+            localStorage.setItem("voice_sos_enable", document.getElementById("voiceSosEnable").value);
+            localStorage.setItem("voice_sos_keyword", document.getElementById("voiceSosKeyword").value.toLowerCase().trim());
+            alert("Voice SOS Settings updated!");
+            initVoiceSOS();
+        }
+
+        let sosRecognition = null;
+        let isSosListening = false;
+
+        function initVoiceSOS() {
+            let enable = localStorage.getItem("voice_sos_enable") === "true";
+            let keyword = localStorage.getItem("voice_sos_keyword");
+            if (!keyword) keyword = "help me";
+            keyword = keyword.toLowerCase().trim();
+
+            let indicator = document.getElementById("voiceStatusIndicator");
+
+            if (!enable) {
+                indicator.style.display = "none";
+                if (sosRecognition) {
+                    sosRecognition.onend = null;
+                    try { sosRecognition.stop(); } catch(e){}
+                    isSosListening = false;
+                }
+                return;
+            }
+
+            if (isSosListening) {
+                indicator.style.display = "inline-block";
+                return;
+            }
+
+            let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Background voice monitoring is not supported in this browser.");
+                document.getElementById("voiceSosEnable").value = "false";
+                localStorage.setItem("voice_sos_enable", "false");
+                return;
+            }
+
+            sosRecognition = new SpeechRecognition();
+            sosRecognition.continuous = true;
+            sosRecognition.interimResults = false;
+            sosRecognition.lang = "en-US";
+
+            sosRecognition.onstart = function() {
+                indicator.style.display = "inline-block";
+            };
+
+            sosRecognition.onresult = function(event) {
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        let transcript = event.results[i][0].transcript.toLowerCase();
+                        if (transcript.includes(keyword)) {
+                            sendSOS(); // TRIGGER SECURE EMERGENCY
+                        }
+                    }
+                }
+            };
+
+            sosRecognition.onerror = function(event) {
+                if(event.error === "not-allowed") {
+                    indicator.style.display = "none";
+                }
+            };
+
+            sosRecognition.onend = function() {
+                if (localStorage.getItem("voice_sos_enable") === "true") {
+                    try { sosRecognition.start(); } catch(e){}
+                } else {
+                    isSosListening = false;
+                    indicator.style.display = "none";
+                }
+            };
+
+            try {
+                sosRecognition.start();
+                isSosListening = true;
+            } catch(e) {}
+        }
+
+        function toggleTheme() {
+            let mode = document.getElementById("themeSelect").value;
+            if (mode === 'dark') {
+                document.body.classList.add("dark-theme");
+            } else {
+                document.body.classList.remove("dark-theme");
+            }
+            localStorage.setItem("theme_pref", mode);
+        }
+
+        // Initialize application settings
+        loadProfile();
+
+        // === MAP INITIALIZATION & LOGIC ===
+        var map = L.map('map').setView([17.3850, 78.4867], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        
+
+        navigator.geolocation.getCurrentPosition(function(position){
+            let userLat = position.coords.latitude;
+            let userLon = position.coords.longitude;
+            map.setView([userLat,userLon], 15);
+            L.marker([userLat,userLon]).addTo(map).bindPopup("You are here").openPopup();
+        }, function(error){ console.log("Location denied"); });
+
+        async function loadIncidents(){
+            try {
+                let response = await fetch("http://127.0.0.1:5000/incidents");
+                let incidents = await response.json();
+                incidents.forEach(incident => {
+                    L.marker([incident.latitude, incident.longitude]).addTo(map).bindPopup(incident.description);
+                });
+            } catch(e) {}
+        }
+        loadIncidents();
+
+        map.on("contextmenu", async function(e){
+            let description = prompt("Enter incident description:");
+            if(!description) return;
+            try {
+                let response = await fetch("http://127.0.0.1:5000/report-incident",{
+                    method:"POST", headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({ user_id:1, latitude:e.latlng.lat, longitude:e.latlng.lng, description:description })
+                });
+                let data = await response.json();
+                alert(data.message);
+                L.marker([e.latlng.lat, e.latlng.lng]).addTo(map).bindPopup(description);
+            } catch(e) { alert("Error reporting"); }
+        });
+
+        // === SMART ROUTE ===
+        let routeLayer = null;
+        let routeStartMarker = null;
+        let routeEndMarker = null;
+
+        var routeMap = L.map('routeMap').setView([17.3850, 78.4867], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(routeMap);
+
+        navigator.geolocation.getCurrentPosition(function(position){
+            routeMap.setView([position.coords.latitude, position.coords.longitude], 13);
+        }, function(error){});
+
+        async function geocodeLocation(placename) {
+            try {
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placename)}&format=json&limit=1`);
+                let data = await res.json();
+                if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            } catch(e) {}
+            return null;
+        }
+
+        document.getElementById("routeBtn").addEventListener("click", async function() {
+            let startText = document.getElementById("routeStartInput").value;
+            let endText = document.getElementById("routeEndInput").value;
+            
+            if(!startText || !endText){ alert("Please enter both start and destination locations!"); return; }
+            
+            document.getElementById("routeStatus").innerText = "Geocoding places... please wait.";
+
+            let startCoords = await geocodeLocation(startText);
+            let endCoords = await geocodeLocation(endText);
+
+            if(!startCoords) { alert("Could not locate the starting point!"); document.getElementById("routeStatus").innerText = ""; return; }
+            if(!endCoords) { alert("Could not locate the destination!"); document.getElementById("routeStatus").innerText = ""; return; }
+
+            if (routeStartMarker) routeMap.removeLayer(routeStartMarker);
+            if (routeEndMarker) routeMap.removeLayer(routeEndMarker);
+            
+            routeStartMarker = L.marker([startCoords.lat, startCoords.lng]).addTo(routeMap).bindPopup("Start: " + startText).openPopup();
+            routeEndMarker = L.marker([endCoords.lat, endCoords.lng]).addTo(routeMap).bindPopup("Destination: " + endText).openPopup();
+
+            document.getElementById("routeStatus").innerText = "Finding secure route...";
+
+            try {
+                let response = await fetch("http://127.0.0.1:5000/safe-route",{
+                    method:"POST", headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({ start_lat:startCoords.lat, start_lon:startCoords.lng, end_lat:endCoords.lat, end_lon:endCoords.lng })
+                });
+                let data = await response.json();
+                
+                if(data.score === 0 || !data.route || data.route.length === 0) {
+                     document.getElementById("routeStatus").innerText = "Route not found or distance too far.";
+                     return;
+                }
+
+                document.getElementById("routeStatus").innerText = "Safety Score: " + data.score;
+                if(routeLayer) routeMap.removeLayer(routeLayer);
+                let latlngs = data.route.map(point => [point[1], point[0]]);
+                routeLayer = L.polyline(latlngs, { color: "green", weight: 5 }).addTo(routeMap);
+                
+                routeMap.fitBounds(routeLayer.getBounds());
+            } catch(error) { alert("Error connecting to routing server"); document.getElementById("routeStatus").innerText = ""; }
+        });
+
+        // === SOS EMERGENCY ===
+        function sendSOS(){
+            let user_id = localStorage.getItem("user_id") || 1;
+            navigator.geolocation.getCurrentPosition(async function(position){
+                try {
+                let response = await fetch("http://127.0.0.1:5000/sos",{
+                    method:"POST", headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({ user_id: user_id, latitude: position.coords.latitude, longitude: position.coords.longitude })
+                });
+                let data = await response.json();
+                alert(data.status);
+                } catch(e) { alert("SOS Error - Backend Unavailable") }
+            });
+        }
+
+        // === CHATBOT LOGIC ===
+        let chatHistory = [];
+        async function askAI(){
+            let question = document.getElementById("question").value;
+            if(question === "") return;
+            
+            let chatArea = document.getElementById("chatArea");
+            chatArea.innerHTML += `<div class="chat-msg chat-user">${question}</div>`;
+            chatHistory.push({role: "User", text: question});
+            document.getElementById("question").value = "";
+
+            try {
+            let response = await fetch("http://127.0.0.1:5000/ai-chat",{
+                method:"POST", headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({ question:question, history: chatHistory })
+            });
+            let data = await response.json();
+            chatArea.innerHTML += `<div class="chat-msg chat-ai">${data.answer}</div>`;
+            chatHistory.push({role: "Assistant", text: data.answer.replace(/<br>/g, "\n")});
+            } catch(e) { chatArea.innerHTML += `<div class="chat-msg chat-ai" style="color:red;">Error connecting API</div>`; }
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // === TRANSLATOR ===
+        async function translateText(){
+            let text = document.getElementById("inputText").value;
+            let sourceLang = document.getElementById("sourceLanguage").value;
+            let targetLang = document.getElementById("targetLanguage").value;
+            if(text === "") return;
+            try {
+            let response = await fetch("http://127.0.0.1:5000/translate",{
+                method:"POST", headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({ text:text, source_lang:sourceLang, target_lang:targetLang })
+            });
+            let data = await response.json();
+            if (data.error) document.getElementById("translatedResult").innerText = "Error: " + data.error;
+            else { document.getElementById("translatedResult").innerText = data.translated_text; speakTranslatedText(); }
+            } catch(e) {}
+        }
+
+        function startVoiceInput() {
+            let sourceLang = document.getElementById("sourceLanguage").value;
+            let recognitionLangMap = { "en": "en-US", "te": "te-IN", "hi": "hi-IN", "ta": "ta-IN" };
+            let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if(!SpeechRecognition){ alert("Voice recognition not supported."); return; }
+            let recognition = new SpeechRecognition();
+            recognition.lang = recognitionLangMap[sourceLang] || "en-US";
+            recognition.onresult = function(event) { document.getElementById("inputText").value = event.results[0][0].transcript; };
+            recognition.start();
+        }
+
+        function speakTranslatedText() {
+            let text = document.getElementById("translatedResult").innerText;
+            if (!text || text.startsWith("Error:")) return;
+            let targetLang = document.getElementById("targetLanguage").value;
+            let url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&q=${encodeURIComponent(text)}&tl=${targetLang}`;
+            new Audio(url).play();
+        }
+
+        // === CURRENCY ===
+        async function convertCurrency(){
+            let amount = document.getElementById("amount").value;
+            let from = document.getElementById("fromCurrency").value;
+            let to = document.getElementById("toCurrency").value;
+            if(!amount) return;
+            try {
+            let response = await fetch("http://127.0.0.1:5000/convert",{
+                method:"POST", headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({ amount:amount, from:from, to:to })
+            });
+            let data = await response.json();
+            document.getElementById("result").innerText = data.result;
+            } catch(e){}
+        }
+
+        // === TRIP BUDGET ===
+        async function estimateBudget(){
+            let origin = document.getElementById("tripOrigin").value;
+            let destination = document.getElementById("tripDestination").value;
+            let people = document.getElementById("tripPeople").value;
+            if(!origin || !destination) return;
+            
+            let resultBox = document.getElementById("budgetResult");
+            resultBox.style.display = "block";
+            resultBox.innerText = "Calculating estimated budget... please wait.";
+            try {
+                let response = await fetch("http://127.0.0.1:5000/trip-budget", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ origin: origin, destination: destination, people: people })
+                });
+                let data = await response.json();
+                resultBox.innerText = data.error ? ("Error: " + data.error) : data.budget_plan;
+            } catch(err) { resultBox.innerText = "Error fetching budget"; }
+        }
+
+    </script>
 </body>
 </html>

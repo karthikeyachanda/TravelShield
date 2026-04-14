@@ -1,4 +1,4 @@
-from backend.database import db
+from database import db
 
 # User table model
 class User(db.Model):
@@ -11,9 +11,8 @@ class User(db.Model):
 
     password = db.Column(db.String(100), nullable=False)
 
-    
-class Incident(db.Model):
 
+class Incident(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     user_id = db.Column(db.Integer)
@@ -21,5 +20,5 @@ class Incident(db.Model):
     latitude = db.Column(db.Float)
 
     longitude = db.Column(db.Float)
-
+    
     description = db.Column(db.String(200))
