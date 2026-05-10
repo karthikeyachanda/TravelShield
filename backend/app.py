@@ -5,15 +5,18 @@ from database import db
 from routes import register_routes
 import google.generativeai as genai
 import os
+from dotenv import load_dotenv
 
+# load environment variables
+load_dotenv()
 # create flask app
 app = Flask(__name__)
 
 # enable CORS
 CORS(app)
 
-# 🔑 GEMINI API KEY (Hardcoded for guaranteed access)
-genai.configure(api_key="")
+# 🔑 GEMINI API KEY
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
 # database configuration
@@ -25,8 +28,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = "karthikeya201620@gmail.com"
-app.config['MAIL_PASSWORD'] = ""
+app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD")
 app.config['MAIL_DEFAULT_SENDER'] = "24211a0593@bvrit.ac.in"
 
 
