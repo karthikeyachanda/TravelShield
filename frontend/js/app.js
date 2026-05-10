@@ -8,7 +8,7 @@ async function login(){
     if(!email || !password) { alert("Please enter credentials"); return; }
 
     try {
-        let response = await fetch("https://travelshield-project.onrender.com/login",{
+        let response = await fetch("https://travelshield-11.onrender.com/login",{
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({ email:email, password:password })
@@ -44,7 +44,7 @@ async function register(){
     }
 
     try {
-        let response = await fetch("https://travelshield-project.onrender.com/register",{
+        let response = await fetch("https://travelshield-11.onrender.com/register",{
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({
