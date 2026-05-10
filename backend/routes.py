@@ -70,6 +70,9 @@ def register_routes(app):
         longitude = data.get("longitude")
 
         user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"status": "Error: User not found in database. Please log out and register again."}), 404
 
         msg = Message(
             subject="TRAVEL SHIELD SOS ALERT",
@@ -92,11 +95,16 @@ Google Maps Link:
 https://www.google.com/maps?q={latitude},{longitude}
 """
 
-        mail.send(msg)
-
-        return jsonify({
-            "status": "SOS alert sent with live location"
-        })
+        try:
+            mail.send(msg)
+            return jsonify({
+                "status": "SOS alert sent with live location"
+            })
+        except Exception as e:
+            print("Mail Error:", str(e))
+            return jsonify({
+                "status": "SOS Error: Email configuration failed on server. Please check Render Environment Variables."
+            }), 500
 
 
     # INCIDENT REPORTING API
