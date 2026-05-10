@@ -5,3 +5,4 @@ Flask-SQLAlchemy
 google-generativeai
 python-dotenv
 gunicorn
+requests

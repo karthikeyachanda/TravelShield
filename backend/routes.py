@@ -1,7 +1,6 @@
 from flask import request, jsonify
 from models import User, Incident
 from database import db
-import openai
 import os
 import requests
 
