@@ -541,7 +541,7 @@
 
         async function loadIncidents(){
             try {
-                let response = await fetch("http://127.0.0.1:5000/incidents");
+                let response = await fetch("https://travelshield-project.onrender.com/incidents");
                 let incidents = await response.json();
                 incidents.forEach(incident => {
                     L.marker([incident.latitude, incident.longitude]).addTo(map).bindPopup(incident.description);
@@ -554,7 +554,7 @@
             let description = prompt("Enter incident description:");
             if(!description) return;
             try {
-                let response = await fetch("http://127.0.0.1:5000/report-incident",{
+                let response = await fetch("https://travelshield-project.onrender.com/report-incident",{
                     method:"POST", headers:{"Content-Type":"application/json"},
                     body:JSON.stringify({ user_id:1, latitude:e.latlng.lat, longitude:e.latlng.lng, description:description })
                 });
@@ -608,7 +608,7 @@
             document.getElementById("routeStatus").innerText = "Finding secure route...";
 
             try {
-                let response = await fetch("http://127.0.0.1:5000/safe-route",{
+                let response = await fetch("https://travelshield-project.onrender.com/safe-route",{
                     method:"POST", headers:{"Content-Type":"application/json"},
                     body:JSON.stringify({ start_lat:startCoords.lat, start_lon:startCoords.lng, end_lat:endCoords.lat, end_lon:endCoords.lng })
                 });
@@ -633,7 +633,7 @@
             let user_id = localStorage.getItem("user_id") || 1;
             navigator.geolocation.getCurrentPosition(async function(position){
                 try {
-                let response = await fetch("http://127.0.0.1:5000/sos",{
+                let response = await fetch("https://travelshield-project.onrender.com/sos",{
                     method:"POST", headers:{"Content-Type":"application/json"},
                     body:JSON.stringify({ user_id: user_id, latitude: position.coords.latitude, longitude: position.coords.longitude })
                 });
@@ -657,7 +657,7 @@
             chatArea.scrollTop = chatArea.scrollHeight;
 
             try {
-                let response = await fetch("http://127.0.0.1:5000/ai-chat", {
+                let response = await fetch("https://travelshield-project.onrender.com/ai-chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: question })
@@ -686,7 +686,7 @@
             let targetLang = document.getElementById("targetLanguage").value;
             if(text === "") return;
             try {
-            let response = await fetch("http://127.0.0.1:5000/translate",{
+            let response = await fetch("https://travelshield-project.onrender.com/translate",{
                 method:"POST", headers:{"Content-Type":"application/json"},
                 body:JSON.stringify({ text:text, source_lang:sourceLang, target_lang:targetLang })
             });
@@ -722,7 +722,7 @@
             let to = document.getElementById("toCurrency").value;
             if(!amount) return;
             try {
-            let response = await fetch("http://127.0.0.1:5000/convert",{
+            let response = await fetch("https://travelshield-project.onrender.com/convert",{
                 method:"POST", headers:{"Content-Type":"application/json"},
                 body:JSON.stringify({ amount:amount, from:from, to:to })
             });
@@ -742,7 +742,7 @@
             resultBox.style.display = "block";
             resultBox.innerText = "Calculating estimated budget... please wait.";
             try {
-                let response = await fetch("http://127.0.0.1:5000/trip-budget", {
+                let response = await fetch("https://travelshield-project.onrender.com/trip-budget", {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ origin: origin, destination: destination, people: people })
                 });
